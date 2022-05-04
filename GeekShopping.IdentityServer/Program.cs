@@ -1,4 +1,5 @@
 using GeekShopping.IdentityServer.Configuration;
+using GeekShopping.IdentityServer.Initializer;
 using GeekShopping.IdentityServer.Model;
 using GeekShopping.IdentityServer.Model.Context;
 using Microsoft.AspNetCore.Identity;
@@ -31,11 +32,15 @@ var builders = builder.Services.AddIdentityServer(options =>
 .AddInMemoryClients(IdentityConfiguration.clients)
 .AddAspNetIdentity<ApplicationUser>();
 
+builder.Services.AddScoped<IDbInitializer, DbInitializer>();
+
 builders.AddDeveloperSigningCredential();
 
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+
+IDbInitializer dbInitializer = app.Services.CreateScope().ServiceProvider.GetService<IDbInitializer>();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -52,6 +57,8 @@ app.UseRouting();
 app.UseIdentityServer();
 
 app.UseAuthorization();
+
+dbInitializer.Initialize();
 
 app.MapControllerRoute(
     name: "default",
